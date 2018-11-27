@@ -1,13 +1,22 @@
 'use strict'
 
 const Producto = use('App/Models/Producto')
+const Database = use('Database');
 
 class ProductoController {
   async alta({request, response, auth}){
     /*
     *Descripcion: Alta de un nuevo producto
     *Header: Authorization: bearer <<token>>
-    *Body: producto.detalle, producto.precio
+    *Body: {
+      producto: {
+        detalle,
+        precio,
+        sucursales: [
+          {id, cant, cant_min}
+        ]
+      }
+    }
     *Formato: obj
     *Return:
     * {
@@ -18,13 +27,16 @@ class ProductoController {
     * }
     */
 
+    //trx
+    const trx = await Database.beginTransaction()
+
     try {
 
       //user alta
       const user = await auth.getUser()
 
       //descuento enviado por el body
-      const {producto} = request.all()
+      const producto = request.input('producto')
 
       //Validacion del producto
       if(!producto.detalle || !producto.precio){
@@ -38,13 +50,36 @@ class ProductoController {
       }
 
       //Creación del producto
-      const productoInstance = new Producto()
-      productoInstance.detalle = producto.detalle
+      let productoInstance = new Producto()
+      productoInstance.detalle = producto.detalle.toLowerCase()
       productoInstance.precio = producto.precio
       productoInstance.user_id_alta = user.id
 
 
-      await productoInstance.save()
+      await productoInstance.save(trx)
+
+      //creación del inventario por sucursal
+      if(producto.sucursales){
+        const sucursalesId = producto.sucursales.map(sucursal => sucursal.id)
+        let position = 0
+        let stock = []
+        await productoInstance.sucursales().attach(sucursalesId, row => {
+          row.cantidad = producto.sucursales[position].cant
+          row.cantidad_minima = producto.sucursales[position].cant_min
+          position++
+          stock.push({
+            sucursal_id: row.sucursal_id,
+            cant: row.cantidad,
+            cant_min: row.cantidad_minima
+          })
+        }, trx)
+
+        //agregamos las sucursales con su stock en el producto a retornar
+        productoInstance.stock = stock
+      }
+
+      //commit
+      trx.commit()
 
       //Success
       return response.json({
@@ -56,6 +91,7 @@ class ProductoController {
 
     } catch (e) {
       //ERROR!!!
+      trx.rollback()
       return response.json({
         status: "error",
         body:{
@@ -69,7 +105,15 @@ class ProductoController {
     /*
     *Descripcion: Modificar un producto
     *Header: Authorization: Beader <<token>>
-    *Body: producto.id, producto.detalle, producto.precio
+    *Body:
+      producto: {
+        id,
+        detalle,
+        precio,
+        sucursales: [
+          {id, cant, cant_min}
+        ]
+      }
     *Formato: obj
     *Return:
     *  {
@@ -80,10 +124,13 @@ class ProductoController {
     *  }
     */
 
+    //trx
+    const trx = await Database.beginTransaction()
+
     try {
 
       //Descuento enviado por el body
-      const {producto} = request.all()
+      const producto = request.input('producto')
 
       //Validacion del producto
       if(!producto.id || !producto.detalle || !producto.precio){
@@ -97,7 +144,7 @@ class ProductoController {
       }
 
       //Find del producto
-      const productoInstance = await Descuento.find(producto.id)
+      const productoInstance = await Producto.find(producto.id)
       if(!productoInstance){
         //ERROR!!!
         return response.json({
@@ -107,9 +154,34 @@ class ProductoController {
           }
         })
       }
-      productoInstance.detalle = producto.detalle
+      productoInstance.detalle = producto.detalle.toLowerCase()
       productoInstance.precio = producto.precio
-      await productoInstance.save()
+      await productoInstance.save(trx)
+
+      //Eliminamos todas las relaciones entre producto y sucursal
+      await productoInstance.sucursales().detach()
+
+      if(producto.sucursales){
+        const sucursalesId = producto.sucursales.map(sucursal => sucursal.id)
+        let position = 0
+        let stock = []
+        await productoInstance.sucursales().attach(sucursalesId, row => {
+          row.cantidad = producto.sucursales[position].cant
+          row.cantidad_minima = producto.sucursales[position].cant_min
+          position++
+          stock.push({
+            sucursal_id: row.sucursal_id,
+            cant: row.cantidad,
+            cant_min: row.cantidad_minima
+          })
+        }, trx)
+
+        //agregamos las sucursales con su stock en el producto a retornar
+        productoInstance.stock = stock
+      }
+
+      //commit
+      trx.commit()
 
       //Success
       return response.json({
@@ -131,17 +203,17 @@ class ProductoController {
     }
   }
 
-  async inactivar({request, response}){
+  async changeStateUser({request, response}){
     /*
-    *Descripcion: Inactivacion de un producto
+    *Descripcion: Inactivacion de un usuario
     *Header: Authorization: bearer <<token>>
-    *Body: producto_id
+    *Body: producto_id, new_state
     *Formato: obj
     *Return:
     * {
     *   status: error/ok,
     *   body: {
-    *     msg/producto
+    *     msg/user
     *   }
     * }
     */
@@ -149,8 +221,9 @@ class ProductoController {
     try {
 
       //Validación del request
-      const idProducto = request.input('producto_id');
-      if(!idProducto){
+      const productoId = request.input('producto_id')
+      const newState = request.input('new_state')
+      if(!productoId){
         //ERROR!!!
         return response.json({
           status: "error",
@@ -160,23 +233,37 @@ class ProductoController {
         })
       }
 
-      //Modifcación de estado
-      const producto = await this.cambiarEstado(idProducto, 0);
+      //Obtenemos el producto por el id
+      const producto = await Producto.find(productoId)
+
+      //Validación del producto
       if(!producto){
-        //ERROR!!!
         return response.json({
           status: "error",
           body: {
-            msg: 'Producto no encontrado'
+            msg: 'producto no encontado'
           }
         })
       }
+
+      //Cambiamos el estado
+      switch (newState) {
+        case 'disable':
+          producto.estado = 0
+          break;
+        case 'delete':
+          producto.estado = 2
+        default:
+          producto.estado = 1
+      }
+
+      await user.save()
 
       //Success
       return response.json({
         status: "ok",
         body: {
-          producto
+          user
         }
       })
     } catch (e) {
@@ -189,82 +276,6 @@ class ProductoController {
       })
     }
 
-  }
-
-  async reactivar({request, response}){
-    /*
-    *Descripcion: Reactivación de producto
-    *Header: Authorization: bearer <<token>>
-    *Body: producto_id
-    *Formato: obj
-    *Return:
-    * {
-    *   status: error/ok,
-    *   body: {
-    *     msg/producto
-    *   }
-    * }
-    */
-
-    try {
-      //Validación del request
-      const idProducto = request.input('producto_id');
-      if(!idProducto){
-        //ERROR!!!
-        return response.json({
-          status: "error",
-          body: {
-            msg: 'Request body incorrecto/incompleto'
-          }
-        })
-      }
-
-      //Modifcación de estado
-      const producto = await this.cambiarEstado(idProducto, 1);
-      if(!producto){
-        //ERROR!!!
-        return response.json({
-          status: "error",
-          body: {
-            msg: 'producto no encontrado'
-          }
-        })
-      }
-
-      //Success
-      return response.json({
-        status: "ok",
-        body: {
-          producto
-        }
-      })
-    } catch (e) {
-      //ERROR!!
-      return response.json({
-        status: "error",
-        body: {
-          e
-        }
-      })
-    }
-
-
-  }
-
-  async cambiarEstado(idProducto, nuevoEstado){
-
-    //Obtenemos el producto por el id
-    const producto = await Producto.find(idProducto)
-
-    //Validación del producto
-    if(!producto){
-      return false
-    }
-
-    //Cambiamos el estado
-    producto.estado = nuevoEstado
-    await producto.save()
-    return producto
   }
 
   async eliminar({request, response}){
@@ -333,9 +344,11 @@ class ProductoController {
     try {
       const products = await Producto
         .query()
+        .where('estado','<>', 2)
         .with('userAlta', user => {
           user.select('id', 'username', 'nombre', 'apellido')
         })
+        .with('sucursales')
         .fetch()
       return response.json({
         status: 'ok',

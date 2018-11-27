@@ -25,7 +25,7 @@ Route.group(() => {
   Route.put('change-pass-user', 'UserController.cambiarPassword').middleware(['auth:jwt'])
   Route.post('forgout-pass-user', 'UserController.forgoutPass')
   Route.post('change-pass-mail-user', 'UserController.cambiarPasswordMail')
-  Route.put('change-state-user', 'UserController.cambiarEstado').middleware(['auth:jwt'])
+  Route.put('change-state-user', 'UserController.changeStateUser').middleware(['auth:jwt'])
   Route.delete('delete-user', 'UserController.eliminar').middleware(['auth:jwt'])
   Route.get('all-user', 'UserController.all').middleware(['auth:jwt'])
   Route.get('profile-user/:id', 'UserController.perfil').middleware(['auth:jwt'])
@@ -57,8 +57,7 @@ Route.group(() => {
   Route.get('all-producto', 'ProductoController.all').middleware(['auth:jwt'])
   Route.post('new-producto', 'ProductoController.alta').middleware(['auth:jwt'])
   Route.put('update-producto', 'ProductoController.modificar').middleware(['auth:jwt'])
-  Route.put('disable-producto', 'ProductoController.inactivar').middleware(['auth:jwt'])
-  Route.put('enable-producto', 'ProductoController.reactivar').middleware(['auth:jwt'])
+  Route.put('change-state-producto', 'ProductoController.cambiarEstado').middleware(['auth:jwt'])
   Route.delete('delete-producto', 'ProductoController.eliminar').middleware(['auth:jwt'])
 
   //Cliente

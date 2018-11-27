@@ -8,8 +8,9 @@ class Producto extends Model {
   }
 
   sucursales(){
-    return this.belongsToMany('App/Models/Sucursal')
-      .pivotTable('producto_sucursal')
+    return this
+      .belongsToMany('App/Models/Sucursal', 'producto_id', 'sucursal_id')
+      .withPivot(['cantidad', 'cantidad_minima'])
   }
 
 }
