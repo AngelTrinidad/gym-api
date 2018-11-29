@@ -5,7 +5,10 @@ const LoginUser = use('App/Models/LoginUser')
 const Hash = use('Hash')
 const Mail = use('Mail')
 const rn = require('random-number')
-const generator = require('generate-password');
+const generator = require('generate-password')
+const moment = require('moment')
+const Helpers = use('Helpers')
+const Drive = use('Drive')
 
 class UserController {
 
@@ -641,47 +644,109 @@ class UserController {
 
   async modificarOtroUsuario({request, response}){
 
-    const userInput = request.input('user')
-    if(!userInput){
-      return response.json({
-        status: "error",
-        body: {
-          msg: 'Request body incompleto/incorrecto'
-        }
-      })
-    }
-
-    const userUpdate = await User.find(userInput.id)
-    if(!userUpdate){
-      return response.json({
-        status: "error",
-        body: {
-          msg: 'User no encontrado'
-        }
-      })
-    }
-
-    userUpdate.nombre = userInput.nombre
-    userUpdate.apellido = userInput.apellido
-    userUpdate.username = userInput.username
-    userUpdate.sucursal_id = userInput.sucursal_id
-    await userUpdate.save()
-
-    //return user
-    const user = await User
-      .query()
-      .with('sucursal', sucursal => {
-        sucursal.select('id', 'detalle')
-      })
-      .where('id', userInput.id)
-      .first()
-
-
-    return {
-      status: 'ok',
-      body:{
-        user
+    try {
+      const userInput = request.input('user')
+      if(!userInput){
+        return response.json({
+          status: "error",
+          body: {
+            msg: 'Request body incompleto/incorrecto'
+          }
+        })
       }
+
+      const userUpdate = await User.find(userInput.id)
+      if(!userUpdate){
+        return response.json({
+          status: "error",
+          body: {
+            msg: 'User no encontrado'
+          }
+        })
+      }
+
+      userUpdate.nombre = userInput.nombre
+      userUpdate.apellido = userInput.apellido
+      userUpdate.username = userInput.username
+      userUpdate.sucursal_id = userInput.sucursal_id
+      await userUpdate.save()
+
+      //return user
+      const user = await User
+        .query()
+        .with('sucursal', sucursal => {
+          sucursal.select('id', 'detalle')
+        })
+        .where('id', userInput.id)
+        .first()
+
+
+      return response.json({
+        status: 'ok',
+        body:{
+          user
+        }
+      })
+
+    } catch (e) {
+      return response.json({
+        status: 'error',
+        body: {
+          msg: e
+        }
+      })
+    }
+
+  }
+
+  async uploadImagenPerfil({request, response, auth}){
+    try {
+      //user logged
+      const user = await auth.getUser()
+
+      //request body
+      const photo = request.file('photo', {
+        types: ['image'],
+        size: '2mb'
+      })
+
+      //move
+      const newName= `profile-${user.username}-${moment().format('YYYYMMDDHHmmss')}.${photo.extname}`
+      await photo.move(Helpers.publicPath('images/users'), {
+        name: newName
+      })
+
+      //validation
+      if(!photo.moved()){
+        return response.json({
+          status: 'error',
+          body:{
+            msg: photo.error()
+          }
+        })
+      }else{
+        //verificamos la existencia de la img anterior
+        if(Drive.exists(`${Helpers.publicPath('images/users')}${user.img_perfil}`)){
+          Drive.delete(`${Helpers.publicPath('images/users')}${user.img_perfil}`)
+        }
+        user.img_perfil = newName
+        await user.save()
+        return response.json({
+          status: 'ok',
+          body:{
+            user
+          }
+        })
+      }
+
+
+    } catch (e) {
+      return response.json({
+        status: 'error',
+        body:{
+          msg: e
+        }
+      })
     }
   }
 

@@ -15,6 +15,7 @@ class UserSchema extends Schema {
       table.integer('estado',1).defaultTo(1).comment('Activo: 1, Inactivo: 0')
       table.integer('sucursal_id').unsigned().references('id').inTable('sucursales')
       table.string('cod_confirmacion', 500).nullable()
+      table.string('img_perfil', 255).nullable()
       table.timestamps()
     })
   }

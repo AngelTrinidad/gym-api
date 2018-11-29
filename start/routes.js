@@ -31,6 +31,7 @@ Route.group(() => {
   Route.get('profile-user/:id', 'UserController.perfil').middleware(['auth:jwt'])
   Route.post('verify-field-user', 'UserController.verificarCampo').middleware(['auth:jwt'])
   Route.put('update-other-user', 'UserController.modificarOtroUsuario').middleware(['auth:jwt'])
+  Route.post('upload-profile-photo-user', 'UserController.uploadImagenPerfil').middleware(['auth:jwt'])
 
   //Sucursal Controller
   Route.get('all-sucursal', 'SucursalController.all').middleware(['auth:jwt'])
