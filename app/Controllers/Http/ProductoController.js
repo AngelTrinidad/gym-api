@@ -350,7 +350,7 @@ class ProductoController {
         })
         .with('sucursales')
         .fetch()
-        
+
       return response.json({
         status: 'ok',
         body: {

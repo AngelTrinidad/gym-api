@@ -516,11 +516,19 @@ class UserController {
       user.estado = !user.estado
       await user.save()
 
+      const userReturn = await User
+        .query()
+        .with('sucursal', sucursal => {
+          sucursal.select('id', 'detalle')
+        })
+        .where('id', '=', user.id)
+        .first()
+
       //Success
       return response.json({
         status: "ok",
         body: {
-          user
+          user: userReturn
         }
       })
     } catch (e) {
@@ -711,7 +719,7 @@ class UserController {
       })
 
       //move
-      const newName= `profile-${user.username}-${moment().format('YYYYMMDDHHmmss')}.${photo.extname}`
+      const newName= `profile-${user.username}-${moment().format('YYYYMMDDHHmmss')}.jpg`
       await photo.move(Helpers.publicPath('images/users'), {
         name: newName
       })
@@ -726,15 +734,15 @@ class UserController {
         })
       }else{
         //verificamos la existencia de la img anterior
-        if(Drive.exists(`${Helpers.publicPath('images/users')}${user.img_perfil}`)){
-          Drive.delete(`${Helpers.publicPath('images/users')}${user.img_perfil}`)
+        if(Drive.exists(`${Helpers.publicPath('images/users')}/${user.img_perfil}`)){
+          Drive.delete(`${Helpers.publicPath('images/users')}/${user.img_perfil}`)
         }
         user.img_perfil = newName
         await user.save()
         return response.json({
           status: 'ok',
           body:{
-            user
+            name_img: newName
           }
         })
       }
