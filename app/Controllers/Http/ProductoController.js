@@ -95,7 +95,7 @@ class ProductoController {
       return response.json({
         status: "error",
         body:{
-          msg: e
+          msg: e.message
         }
       })
     }
@@ -197,13 +197,13 @@ class ProductoController {
       return response.json({
         status: "error",
         body:{
-          msg: e
+          msg: e.message
         }
       })
     }
   }
 
-  async changeStateUser({request, response}){
+  async cambiarEstado({request, response}){
     /*
     *Descripcion: Inactivacion de un usuario
     *Header: Authorization: bearer <<token>>
@@ -253,17 +253,17 @@ class ProductoController {
           break;
         case 'delete':
           producto.estado = 2
+          break;
         default:
           producto.estado = 1
       }
-
-      await user.save()
+      await producto.save()
 
       //Success
       return response.json({
         status: "ok",
         body: {
-          user
+          producto
         }
       })
     } catch (e) {
@@ -271,7 +271,7 @@ class ProductoController {
       return response.json({
         status: "error",
         body:{
-          msg: e
+          msg: e.message
         }
       })
     }
@@ -308,13 +308,13 @@ class ProductoController {
       }
 
       //Validación de Producto
-      const producto = await Descuento.find(idProducto)
+      const producto = await Producto.find(idProducto)
       if(!producto){
         //ERROR!!!
         return response.json({
           status: "error",
           body: {
-            msg: 'Descuento no encontrado'
+            msg: 'producto no encontrado'
           }
         })
       }
@@ -334,7 +334,7 @@ class ProductoController {
       return response.json({
         status: "error",
         body:{
-          msg: e
+          msg: e.message
         }
       })
     }
@@ -350,6 +350,7 @@ class ProductoController {
         })
         .with('sucursales')
         .fetch()
+        
       return response.json({
         status: 'ok',
         body: {

@@ -64,7 +64,7 @@ class UserController {
       return response.json({
         status: "error",
         body:{
-          msg: e
+          msg: e.message
         }
       })
     }
@@ -137,7 +137,7 @@ class UserController {
       return response.json({
         status: "error",
         body:{
-          msg: e
+          msg: e.message
         }
       })
     }
@@ -193,7 +193,7 @@ class UserController {
       return response.json({
         status:'error',
         body: {
-          msg: e
+          msg: e.message
         }
       })
     }
@@ -267,7 +267,7 @@ class UserController {
       return response.json({
         status:'error',
         body: {
-          msg: e
+          msg: e.message
         }
       })
     }
@@ -352,7 +352,7 @@ class UserController {
       return response.json({
         status:'error',
         body: {
-          msg: e
+          msg: e.message
         }
       })
     }
@@ -411,7 +411,7 @@ class UserController {
       return response.json({
         status: "error",
         body:{
-          msg: e
+          msg: e.message
         }
       })
     }
@@ -464,7 +464,7 @@ class UserController {
       return response.json({
         status: "error",
         body:{
-          msg: e
+          msg: e.message
         }
       })
     }
@@ -528,7 +528,7 @@ class UserController {
       return response.json({
         status: "error",
         body:{
-          msg: e
+          msg: e.message
         }
       })
     }
@@ -591,7 +591,7 @@ class UserController {
       return response.json({
         status: "error",
         body:{
-          msg: e
+          msg: e.message
         }
       })
     }
@@ -617,7 +617,7 @@ class UserController {
       response.json({
         status: 'error',
         body:{
-          msg: e
+          msg: e.message
         }
       })
     }
@@ -636,7 +636,7 @@ class UserController {
       response.json({
         status: 'error',
         body:{
-          msg: e
+          msg: e.message
         }
       })
     }
@@ -692,7 +692,7 @@ class UserController {
       return response.json({
         status: 'error',
         body: {
-          msg: e
+          msg: e.message
         }
       })
     }
@@ -744,7 +744,7 @@ class UserController {
       return response.json({
         status: 'error',
         body:{
-          msg: e
+          msg: e.message
         }
       })
     }

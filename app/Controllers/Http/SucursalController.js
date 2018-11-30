@@ -59,7 +59,7 @@ class SucursalController {
       return response.json({
         status: "error",
         body:{
-          msg: e
+          msg: e.message
         }
       })
     }
@@ -126,7 +126,7 @@ class SucursalController {
       return response.json({
         status: "error",
         body:{
-          msg: e
+          msg: e.message
         }
       })
     }
@@ -190,7 +190,7 @@ class SucursalController {
       return response.json({
         status: "error",
         body:{
-          msg: e
+          msg: e.message
         }
       })
     }
@@ -253,7 +253,7 @@ class SucursalController {
       return response.json({
         status: "error",
         body:{
-          msg: e
+          msg: e.message
         }
       })
     }
@@ -297,7 +297,7 @@ class SucursalController {
       return response.json({
         status: "error",
         body:{
-          msg: e
+          msg: e.message
         }
       })
     }
