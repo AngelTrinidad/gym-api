@@ -43,30 +43,26 @@ Route.group(() => {
   //Servicio Controller
   Route.post('new-servicio', 'ServicioController.alta').middleware(['auth:jwt'])
   Route.put('update-servicio', 'ServicioController.modificar').middleware(['auth:jwt'])
-  Route.put('disable-servicio', 'ServicioController.inactivar').middleware(['auth:jwt'])
-  Route.put('enable-servicio', 'ServicioController.reactivar').middleware(['auth:jwt'])
-  Route.delete('delete-servicio', 'ServicioController.eliminar').middleware(['auth:jwt'])
+  Route.get('all-servicio', 'ServicioController.all').middleware(['auth:jwt'])
+  Route.put('change-state-servicio', 'ServicioController.cambiarEstado').middleware(['auth:jwt'])
 
   //Descuento
   Route.post('new-descuento', 'DescuentoController.alta').middleware(['auth:jwt'])
   Route.put('update-descuento', 'DescuentoController.modificar').middleware(['auth:jwt'])
   Route.put('disable-descuento', 'DescuentoController.inactivar').middleware(['auth:jwt'])
   Route.put('enable-descuento', 'DescuentoController.reactivar').middleware(['auth:jwt'])
-  Route.delete('delete-descuento', 'DescuentoController.eliminar').middleware(['auth:jwt'])
 
   //Producto
   Route.get('all-producto', 'ProductoController.all').middleware(['auth:jwt'])
   Route.post('new-producto', 'ProductoController.alta').middleware(['auth:jwt'])
   Route.put('update-producto', 'ProductoController.modificar').middleware(['auth:jwt'])
   Route.put('change-state-producto', 'ProductoController.cambiarEstado').middleware(['auth:jwt'])
-  Route.delete('delete-producto', 'ProductoController.eliminar').middleware(['auth:jwt'])
 
   //Cliente
   Route.post('new-cliente', 'ClienteController.alta').middleware(['auth:jwt'])
   Route.put('update-cliente', 'ClienteController.modificar').middleware(['auth:jwt'])
   Route.put('disable-cliente', 'ClienteController.inactivar').middleware(['auth:jwt'])
   Route.put('enable-cliente', 'ClienteController.reactivar').middleware(['auth:jwt'])
-  Route.delete('delete-cliente', 'ClienteController.eliminar').middleware(['auth:jwt'])
   Route.post('newService-cliente', 'ClienteController.nuevoServicio').middleware(['auth:jwt'])
   Route.post('disableService-cliente', 'ClienteController.inactivarServicio').middleware(['auth:jwt'])
   Route.post('discount-cliente', 'ClienteController.aplicarDescuento').middleware(['auth:jwt'])

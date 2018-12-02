@@ -40,7 +40,7 @@ class ServicioController {
 
       //Creación del servicio
       const servicioInstance = new Servicio()
-      servicioInstance.detalle = servicio.detalle
+      servicioInstance.detalle = servicio.detalle.toLowerCase()
       servicioInstance.precio = servicio.precio
       servicioInstance.user_id_alta = user.id
 
@@ -109,7 +109,7 @@ class ServicioController {
         })
       }
       servicioInstance.detalle = servicio.detalle
-      servicioInstance.direccion = servicio.precio
+      servicioInstance.precio = servicio.precio
       await servicioInstance.save()
 
       //Success
@@ -132,17 +132,17 @@ class ServicioController {
     }
   }
 
-  async inactivar({request, response}){
+  async cambiarEstado({request, response}){
     /*
     *Descripcion: Inactivacion de un servicio
-    *Header: Authorization
-    *Body: servicio_id
+    *Header: Authorization: bearer <<token>>
+    *Body: servicio_id, new_state
     *Formato: obj
     *Return:
     * {
     *   status: error/ok,
     *   body: {
-    *     msg/servicio
+    *     msg/user
     *   }
     * }
     */
@@ -150,8 +150,9 @@ class ServicioController {
     try {
 
       //Validación del request
-      const idServicio = request.input('servicio_id');
-      if(!idServicio){
+      const servicioId = request.input('servicio_id')
+      const newState = request.input('new_state')
+      if(!servicioId){
         //ERROR!!!
         return response.json({
           status: "error",
@@ -161,17 +162,31 @@ class ServicioController {
         })
       }
 
-      //Modifcación de estado
-      const servicio = await this.cambiarEstado(idServicio, 0);
+      //Obtenemos el servicio por el id
+      const servicio = await Servicio.find(servicioId)
+
+      //Validación del servicio
       if(!servicio){
-        //ERROR!!!
         return response.json({
           status: "error",
           body: {
-            msg: 'Servicio no encontrado'
+            msg: 'servicio no encontado'
           }
         })
       }
+
+      //Cambiamos el estado
+      switch (newState) {
+        case 'disable':
+          servicio.estado = 0
+          break;
+        case 'delete':
+          servicio.estado = 2
+          break;
+        default:
+          servicio.estado = 1
+      }
+      await servicio.save()
 
       //Success
       return response.json({
@@ -185,87 +200,11 @@ class ServicioController {
       return response.json({
         status: "error",
         body:{
-          msg: e
+          msg: e.message
         }
       })
     }
 
-  }
-
-  async reactivar({request, response}){
-    /*
-    *Descripcion: Reactivación de servicio
-    *Header: Authorization
-    *Body: servicio_id
-    *Formato: obj
-    *Return:
-    * {
-    *   status: error/ok,
-    *   body: {
-    *     msg/user
-    *   }
-    * }
-    */
-
-    try {
-      //Validación del request
-      const idServicio = request.input('servicio_id');
-      if(!idServicio){
-        //ERROR!!!
-        return response.json({
-          status: "error",
-          body: {
-            msg: 'Request body incorrecto/incompleto'
-          }
-        })
-      }
-
-      //Modifcación de estado
-      const servicio = await this.cambiarEstado(idServicio, 1);
-      if(!idServicio){
-        //ERROR!!!
-        return response.json({
-          status: "error",
-          body: {
-            msg: 'Servicio no encontrado'
-          }
-        })
-      }
-
-      //Success
-      return response.json({
-        status: "ok",
-        body: {
-          servicio
-        }
-      })
-    } catch (e) {
-      //ERROR!!
-      return response.json({
-        status: "error",
-        body: {
-          e
-        }
-      })
-    }
-
-
-  }
-
-  async cambiarEstado(idServicio, nuevoEstado){
-
-    //Obtenemos el servicio por el id
-    const servicio = await Sucursal.find(idServicio)
-
-    //Validación del servicio
-    if(!servicio){
-      return false
-    }
-
-    //Cambiamos el estado
-    servicio.estado = nuevoEstado
-    await servicio.save()
-    return servicio
   }
 
   async eliminar({request, response}){
@@ -329,6 +268,29 @@ class ServicioController {
       })
     }
 
+  }
+
+  async all({response}){
+    try {
+      const servicios = await Servicio
+        .query()
+        .orderBy('detalle', 'asc')
+        .where('estado', '<>', 2)
+        .fetch()
+      return response.json({
+        status: 'ok',
+        body: {
+          servicios
+        }
+      })
+    } catch (e) {
+      response.json({
+        status: 'error',
+        body:{
+          msg: e.message
+        }
+      })
+    }
   }
 }
 

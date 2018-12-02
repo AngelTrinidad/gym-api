@@ -1,7 +1,10 @@
 'use strict'
 
 const Producto = use('App/Models/Producto')
-const Database = use('Database');
+const Database = use('Database')
+const moment = require('moment')
+const Helpers = use('Helpers')
+const Drive = use('Drive')
 
 class ProductoController {
   async alta({request, response, auth}){
@@ -35,8 +38,16 @@ class ProductoController {
       //user alta
       const user = await auth.getUser()
 
-      //descuento enviado por el body
-      const producto = request.input('producto')
+      //producto enviado por el formData
+      const producto = {
+        detalle: request.input('detalle'),
+        precio: request.input('precio'),
+        sucursales: JSON.parse(request.input('sucursales')),
+        img: request.file('img', {
+          types: ['image'],
+          size: '2mb'
+        })
+      }
 
       //Validacion del producto
       if(!producto.detalle || !producto.precio){
@@ -54,19 +65,41 @@ class ProductoController {
       productoInstance.detalle = producto.detalle.toLowerCase()
       productoInstance.precio = producto.precio
       productoInstance.user_id_alta = user.id
-
-
       await productoInstance.save(trx)
+
+      //en caso de enviar una imagen
+      if(producto.img){
+        const newName= `${productoInstance.detalle}-${moment().format('YYYYMMDDHHmmss')}.jpg`
+        await producto.img.move(Helpers.publicPath('images/products'), {
+          name: newName
+        })
+
+        //validation
+        if(!producto.img.moved()){
+          trx.rollback()
+          return response.json({
+            status: 'error',
+            body:{
+              msg: producto.img.error()
+            }
+          })
+        }else{
+          productoInstance.img = newName
+          await productoInstance.save(trx)
+        }
+      }
 
       //creación del inventario por sucursal
       if(producto.sucursales){
         const sucursalesId = producto.sucursales.map(sucursal => sucursal.id)
         let position = 0
         let stock = []
+        let total_stock = 0
         await productoInstance.sucursales().attach(sucursalesId, row => {
           row.cantidad = producto.sucursales[position].cant
           row.cantidad_minima = producto.sucursales[position].cant_min
           position++
+          total_stock += row.cantidad
           stock.push({
             sucursal_id: row.sucursal_id,
             cant: row.cantidad,
@@ -76,6 +109,7 @@ class ProductoController {
 
         //agregamos las sucursales con su stock en el producto a retornar
         productoInstance.stock = stock
+        productoInstance.total_stock = total_stock
       }
 
       //commit
@@ -130,7 +164,17 @@ class ProductoController {
     try {
 
       //Descuento enviado por el body
-      const producto = request.input('producto')
+      //producto enviado por el formData
+      const producto = {
+        id: request.input('id'),
+        detalle: request.input('detalle'),
+        precio: request.input('precio'),
+        sucursales: JSON.parse(request.input('sucursales')),
+        img: request.file('img', {
+          types: ['image'],
+          size: '2mb'
+        })
+      }
 
       //Validacion del producto
       if(!producto.id || !producto.detalle || !producto.precio){
@@ -158,17 +202,45 @@ class ProductoController {
       productoInstance.precio = producto.precio
       await productoInstance.save(trx)
 
+      //en caso de enviar una imagen
+      if(producto.img){
+        const newName= `${productoInstance.detalle}-${moment().format('YYYYMMDDHHmmss')}.jpg`
+        await producto.img.move(Helpers.publicPath('images/products'), {
+          name: newName
+        })
+
+        //validation
+        if(!producto.img.moved()){
+          trx.rollback()
+          return response.json({
+            status: 'error',
+            body:{
+              msg: producto.img.error()
+            }
+          })
+        }else{
+          //verificamos la existencia de la img anterior
+          if(Drive.exists(`${Helpers.publicPath('images/products')}/${productoInstance.img}`)){
+            Drive.delete(`${Helpers.publicPath('images/products')}/${productoInstance.img}`)
+          }
+          productoInstance.img = newName
+          await productoInstance.save(trx)
+        }
+      }
+
       //Eliminamos todas las relaciones entre producto y sucursal
-      await productoInstance.sucursales().detach()
+      await productoInstance.sucursales().detach(null, trx)
 
       if(producto.sucursales){
         const sucursalesId = producto.sucursales.map(sucursal => sucursal.id)
         let position = 0
         let stock = []
+        let total_stock = 0
         await productoInstance.sucursales().attach(sucursalesId, row => {
           row.cantidad = producto.sucursales[position].cant
           row.cantidad_minima = producto.sucursales[position].cant_min
           position++
+          total_stock += row.cantidad
           stock.push({
             sucursal_id: row.sucursal_id,
             cant: row.cantidad,
@@ -178,6 +250,7 @@ class ProductoController {
 
         //agregamos las sucursales con su stock en el producto a retornar
         productoInstance.stock = stock
+        productoInstance.total_stock = total_stock
       }
 
       //commit
@@ -342,8 +415,13 @@ class ProductoController {
 
   async all({response}){
     try {
+      const subquery = `select SUM(sqps.cantidad)
+        from producto_sucursal as sqps
+        where sqps.producto_id = productos.id`
+
       const products = await Producto
         .query()
+        .select(Database.raw(`productos.*, (${subquery}) as total_stock`))
         .where('estado','<>', 2)
         .with('userAlta', user => {
           user.select('id', 'username', 'nombre', 'apellido')

@@ -134,9 +134,9 @@ class SucursalController {
 
   async cambiarEstado({request, response}){
     /*
-    *Descripcion: Inactivacion de un usuario
+    *Descripcion: Cambio de estado de sucursal
     *Header: Authorization: bearer <<token>>
-    *Body: user_id
+    *Body: producto_id, new_state
     *Formato: obj
     *Return:
     * {
@@ -150,8 +150,9 @@ class SucursalController {
     try {
 
       //Validación del request
-      const idSucursal = request.input('sucursal_id');
-      if(!idSucursal){
+      const sucursalId = request.input('sucursal_id')
+      const newState = request.input('new_state')
+      if(!sucursalId){
         //ERROR!!!
         return response.json({
           status: "error",
@@ -161,21 +162,31 @@ class SucursalController {
         })
       }
 
-      //Obtenemos el user por el id
-      const sucursal = await Sucursal.find(idSucursal)
+      //Obtenemos el producto por el id
+      const sucursal = await Sucursal.find(sucursalId)
 
-      //Validación del user id
+      //Validación del producto
       if(!sucursal){
         return response.json({
           status: "error",
           body: {
-            msg: 'Sucursal no encontado'
+            msg: 'sucursal no encontado'
           }
         })
       }
 
       //Cambiamos el estado
-      sucursal.estado = !sucursal.estado
+      console.log(newState)
+      switch (newState) {
+        case 'disable':
+          sucursal.estado = 0
+          break;
+        case 'delete':
+          sucursal.estado = 2
+          break;
+        default:
+          sucursal.estado = 1
+      }
       await sucursal.save()
 
       //Success
@@ -281,6 +292,7 @@ class SucursalController {
       const sucursales = await Sucursal
         .query()
         .select('id', 'detalle', 'direccion', 'contacto', 'created_at as fecha_creacion', 'estado')
+        .where('estado', '<>', 2)
         .fetch()
 
       //Success

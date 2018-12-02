@@ -613,6 +613,7 @@ class UserController {
         .with('sucursal', sucursal => {
           sucursal.select('id', 'detalle')
         })
+        .where('estado', '<>', 2)
         .orderBy('username', 'asc')
         .fetch()
       return response.json({
