@@ -51,6 +51,7 @@ Route.group(() => {
   Route.put('update-descuento', 'DescuentoController.modificar').middleware(['auth:jwt'])
   Route.put('disable-descuento', 'DescuentoController.inactivar').middleware(['auth:jwt'])
   Route.put('enable-descuento', 'DescuentoController.reactivar').middleware(['auth:jwt'])
+  Route.get('all-descuento', 'DescuentoController.all').middleware(['auth:jwt'])
 
   //Producto
   Route.get('all-producto', 'ProductoController.all').middleware(['auth:jwt'])

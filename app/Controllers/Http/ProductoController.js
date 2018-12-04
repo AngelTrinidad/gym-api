@@ -436,7 +436,7 @@ class ProductoController {
         }
       })
     } catch (e) {
-      response.json({
+      return response.json({
         status: 'error',
         body:{
           msg: e.message

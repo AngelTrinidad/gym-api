@@ -665,14 +665,15 @@ class ClienteController {
     try {
       const clientes = await Cliente
         .query()
+        .with('sucursal')
+        .withCount('servicios as total_servicios')
         .with('ingresos', ingreso => {
-          ingreso.select('id', 'created_at', 'cliente_id', 'sucursal_id')
+          ingreso
+            .orderBy('created_at', 'desc')
             .with('sucursal', sucursal => {
               sucursal.select('id','detalle')
             })
-        })
-        .with('servicios', servicio => {
-          servicio.select('id', 'detalle')
+            .limit(1)
         })
         .fetch()
 
@@ -686,7 +687,7 @@ class ClienteController {
       response.json({
         status: 'error',
         body:{
-          msg: e
+          msg: e.message
         }
       })
     }

@@ -29,7 +29,7 @@ class DescuentoController {
 
       //Validacion del descuento
       if(!descuento.descripcion || (!descuento.porcentaje_descuento && !descuento.monto_descuento)
-          || !descuento.fecha_inicio || !descuento.fecha_fin){
+          || !descuento.fecha_inicio){
         //ERROR!!!
         return response.json({
           status: "error",
@@ -39,7 +39,7 @@ class DescuentoController {
         })
       }
 
-      if(descuento.fecha_fin < descuento.fecha_inicio){
+      if(descuento.fecha_fin && descuento.fecha_fin < descuento.fecha_inicio){
         //ERROR!!!
         return response.json({
           status: "error",
@@ -74,7 +74,7 @@ class DescuentoController {
       return response.json({
         status: "error",
         body:{
-          msg: e
+          msg: e.message
         }
       })
     }
@@ -103,7 +103,7 @@ class DescuentoController {
 
       //Validacion del descuento
       if(!descuento.id || !descuento.descripcion || (!descuento.porcentaje_descuento && !descuento.monto_descuento)
-          || !descuento.fecha_inicio || !descuento.fecha_fin){
+          || !descuento.fecha_inicio){
         //ERROR!!!
         return response.json({
           status: "error",
@@ -113,7 +113,7 @@ class DescuentoController {
         })
       }
 
-      if(descuento.fecha_fin < descuento.fecha_inicio){
+      if(descuento.fecha_fin && descuento.fecha_fin < descuento.fecha_inicio){
         //ERROR!!!
         return response.json({
           status: "error",
@@ -134,7 +134,7 @@ class DescuentoController {
           }
         })
       }
-      descuentoInstance.descripcion = descuento.detalle
+      descuentoInstance.descripcion = descuento.descripcion
       descuentoInstance.porcentaje_descuento = (descuento.porcentaje_descuento ? descuento.porcentaje_descuento : null)
       descuentoInstance.monto_descuento = (descuento.monto_descuento ? descuento.monto_descuento : null)
       descuentoInstance.fecha_inicio = descuento.fecha_inicio
@@ -155,7 +155,7 @@ class DescuentoController {
       return response.json({
         status: "error",
         body:{
-          msg: e
+          msg: e.message
         }
       })
     }
@@ -214,7 +214,7 @@ class DescuentoController {
       return response.json({
         status: "error",
         body:{
-          msg: e
+          msg: e.message
         }
       })
     }
@@ -353,14 +353,36 @@ class DescuentoController {
       return response.json({
         status: "error",
         body:{
-          msg: e
+          msg: e.message
         }
       })
     }
 
   }
 
-  
+  async all({response}){
+    try {
+      const descuentos = await Descuento
+        .query()
+        .where('estado', '<>', 2)
+        .orderBy('descripcion', 'asc')
+        .fetch()
+      return response.json({
+        status: 'ok',
+        body: {
+          descuentos
+        }
+      })
+    } catch (e) {
+      return response.json({
+        status: 'error',
+        body:{
+          msg: e.message
+        }
+      })
+    }
+  }
+
 }
 
 module.exports = DescuentoController
