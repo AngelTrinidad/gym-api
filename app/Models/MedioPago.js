@@ -15,4 +15,4 @@ class MedioPago extends Model {
 
 }
 
-module.exports = TipoPago
+module.exports = MedioPago

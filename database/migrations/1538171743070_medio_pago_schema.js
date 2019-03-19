@@ -8,6 +8,7 @@ class MedioPagoSchema extends Schema {
       table.increments();
       table.timestamps();
       table.string('detalle').notNullable();
+      table.integer('estado', 1).defaultTo(1);
     })
   }
 

@@ -26,7 +26,7 @@ Factory.blueprint('App/Models/User', async (faker, i, data) => {
   if(data.first){
     username = 'angelt'
     email = '96trinidad@gmail.com'
-    password = await Hash.make('Tulina1997'),
+    password = 'Tulina1997',
     nombre = 'angel'
     apellido = 'trinidad'
   }

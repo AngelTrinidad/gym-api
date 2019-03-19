@@ -132,7 +132,6 @@ class UserController {
       })
 
     } catch (e) {
-      console.log(e)
       //ERROR!!!
       return response.json({
         status: "error",
@@ -213,7 +212,7 @@ class UserController {
     *    }
     *  }
     */
-    try {
+    //try {
 
       //request body
       const email = request.input('email')
@@ -248,7 +247,7 @@ class UserController {
       user.save()
 
       //Email con el link de confirmacion
-      await Mail.send('emails.sendLink', {user: user.toJSON(), cod: cod_confirm}, (message) => {
+      const correo = await Mail.send('emails.sendLink', {user: user.toJSON(), cod: cod_confirm}, (message) => {
         message
           .to(user.email)
           .from('support.solvo.com.py')
@@ -262,7 +261,7 @@ class UserController {
           cod_confirm
         }
       })
-    } catch (e) {
+    /*} catch (e) {
       //ERROR!!
       return response.json({
         status:'error',
@@ -270,7 +269,7 @@ class UserController {
           msg: e.message
         }
       })
-    }
+    }*/
   }
 
   async cambiarPasswordMail({request, response}){

@@ -161,26 +161,16 @@ class DescuentoController {
     }
   }
 
-  async inactivar({request, response}){
+  async cambiarEstado({request, response}){
     /*
-    *Descripcion: Inactivacion de un descuento
-    *Header: Authorization: bearer <<token>>
-    *Body: descuento_id
-    *Formato: obj
-    *Return:
-    * {
-    *   status: error/ok,
-    *   body: {
-    *     msg/descuento
-    *   }
-    * }
     */
 
     try {
 
       //Validación del request
-      const idDescuento = request.input('descuento_id');
-      if(!idDescuento){
+      const descuentoId = request.input('descuento_id')
+      const newState = request.input('new_state')
+      if(!descuentoId){
         //ERROR!!!
         return response.json({
           status: "error",
@@ -190,17 +180,31 @@ class DescuentoController {
         })
       }
 
-      //Modifcación de estado
-      const descuento = await this.cambiarEstado(idDescuento, 0);
+      //Obtenemos el descuento por el id
+      const descuento = await Descuento.find(descuentoId)
+
+      //Validación del servicio
       if(!descuento){
-        //ERROR!!!
         return response.json({
           status: "error",
           body: {
-            msg: 'Descuento no encontrado'
+            msg: 'descuento no encontado'
           }
         })
       }
+
+      //Cambiamos el estado
+      switch (newState) {
+        case 'disable':
+          descuento.estado = 0
+          break;
+        case 'delete':
+          descuento.estado = 2
+          break;
+        default:
+          descuento.estado = 1
+      }
+      await descuento.save()
 
       //Success
       return response.json({
@@ -219,82 +223,6 @@ class DescuentoController {
       })
     }
 
-  }
-
-  async reactivar({request, response}){
-    /*
-    *Descripcion: Reactivación de descuento
-    *Header: Authorization: bearer <<token>>
-    *Body: descuento_id
-    *Formato: obj
-    *Return:
-    * {
-    *   status: error/ok,
-    *   body: {
-    *     msg/descuento
-    *   }
-    * }
-    */
-
-    try {
-      //Validación del request
-      const idDescuento = request.input('descuento_id');
-      if(!idDescuento){
-        //ERROR!!!
-        return response.json({
-          status: "error",
-          body: {
-            msg: 'Request body incorrecto/incompleto'
-          }
-        })
-      }
-
-      //Modifcación de estado
-      const descuento = await this.cambiarEstado(idDescuento, 1);
-      if(!descuento){
-        //ERROR!!!
-        return response.json({
-          status: "error",
-          body: {
-            msg: 'Descuento no encontrado'
-          }
-        })
-      }
-
-      //Success
-      return response.json({
-        status: "ok",
-        body: {
-          descuento
-        }
-      })
-    } catch (e) {
-      //ERROR!!
-      return response.json({
-        status: "error",
-        body: {
-          e
-        }
-      })
-    }
-
-
-  }
-
-  async cambiarEstado(idDescuento, nuevoEstado){
-
-    //Obtenemos el descuento por el id
-    const descuento = await Descuento.find(idDescuento)
-
-    //Validación del descuento
-    if(!descuento){
-      return false
-    }
-
-    //Cambiamos el estado
-    descuento.estado = nuevoEstado
-    await descuento.save()
-    return descuento
   }
 
   async eliminar({request, response}){

@@ -49,10 +49,14 @@ Route.group(() => {
   //Descuento
   Route.post('new-descuento', 'DescuentoController.alta').middleware(['auth:jwt'])
   Route.put('update-descuento', 'DescuentoController.modificar').middleware(['auth:jwt'])
-  Route.put('disable-descuento', 'DescuentoController.inactivar').middleware(['auth:jwt'])
-  Route.put('enable-descuento', 'DescuentoController.reactivar').middleware(['auth:jwt'])
+  Route.put('change-state-descuento', 'DescuentoController.cambiarEstado').middleware(['auth:jwt'])
   Route.get('all-descuento', 'DescuentoController.all').middleware(['auth:jwt'])
 
+  //Medios Pago
+  Route.put('change-state-mediosPago', 'MediosPagoController.cambiarEstado').middleware(['auth:jwt'])
+  Route.get('all-mediosPago', 'MediosPagoController.all').middleware(['auth:jwt'])
+  Route.get('all-enable-mediosPago', 'MediosPagoController.allEnable').middleware(['auth:jwt'])
+  
   //Producto
   Route.get('all-producto', 'ProductoController.all').middleware(['auth:jwt'])
   Route.post('new-producto', 'ProductoController.alta').middleware(['auth:jwt'])
